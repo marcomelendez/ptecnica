@@ -1,4 +1,4 @@
-# Docker com PHP 8
+# Prueba Tecnica Desarrollo 1
 
 Esta configurado por defecto un listado de 2 proyectos y 3 repositorios ubicado en el directorio <repositories>
 - library1
