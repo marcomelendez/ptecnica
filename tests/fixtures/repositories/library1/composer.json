@@ -1,0 +1,20 @@
+{
+    "name": "repositories/library1",
+    "description": "Prueba Tecnica",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Marco Melendez"
+        }
+    ],
+    "require": {
+        "repositories/library4":"1.0",
+        "other/library5":"1.0"
+    }
+}
