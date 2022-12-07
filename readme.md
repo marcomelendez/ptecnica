@@ -15,7 +15,7 @@ Esta pensado como un comando de terminal que podria usarse desde los hooks de GI
 y que el mismo realice la llamada al script de php
 
 ejempl:
-php bootstrap.php https://localhost/repositories/library1.git 889546413c97de2d05063b8cb7b193c2531ea222 dev repositories/library4
+**php bootstrap.php https://localhost/repositories/library1.git 889546413c97d dev repositories/library4**
 
 Parametros:
 - urlGit
@@ -24,3 +24,4 @@ Parametros:
 - repositorio(opcional) solo para ejecucion de formal manual y temporal hasta definir donde se debera obtener el nombre del repositorio
 donde se realizo el commit.
 
+Se ha realizado en PHP 8. La carpeta Docker es opcional, las clases se encuentra en el directorio /src.
