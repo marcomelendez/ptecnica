@@ -5,40 +5,97 @@ namespace App;
 use App\Observer\Pipelines;
 use App\Observer\RunTesting;
 
-class Repository 
+class Repository
 {
-    public function run($urlGit, $commit, $branch, $repo = null)
+    protected $search;
+
+    /**
+     * Comprueba las dependencia para determinar que proyectos son afectados con el cambio 
+     * informado por un commit.
+     *
+     * @param string $urlGit
+     * @param string $commit
+     * @param string $branch
+     * @param string $search
+     * @return void
+     */
+    public function run(string $urlGit, string $commit, string $branch, string $search): void
     {
         /**TODO: Debe hacer logica para otener el repositorio que se actualizo por lo pronto es recibido por parametros
          * quizas puedad tomarlo del composer.lock utilizando url del git
          */
-        
-        $dependenceRepository = $this->getDependenceRepository($repo, Config::PROJECTS);
 
-        /** Toda logica de pipelines */
-        $pipelines = new Pipelines();
-        $pipelines->attach(new RunTesting($dependenceRepository));
-        $pipelines->notify();
-    }
+        $this->search = $search;
 
-    public function getDependenceRepository($repo, array $arrProjects): array
-    {
-        $directories = $this->getTreeRepositories($arrProjects);
+        $arrProjects = Config::PROJECTS;
+
+        $directories = $this->treeDependence($arrProjects);
+
         $projects = [];
 
-        foreach($directories as $inx =>$directory){
-            
+        foreach ($directories as $inx => $directory) {
+
             $result = false;
 
-            if($this->hasRelations($directory, $repo, $result)){
+            if ($this->existDependence($directory['parent'], $result)) {
 
                 $projects[] = $arrProjects[$inx];
             }
         }
 
-        return $projects;
+        $this->notifyPipelines($projects);
     }
-    
+
+    /**
+     * Undocumented function
+     *
+     * @param array $projects
+     * @return void
+     */
+    private function notifyPipelines(array $projects)
+    {
+        /** Toda logica de pipelines */
+        $pipelines = new Pipelines();
+        $pipelines->attach(new RunTesting($projects));
+        $pipelines->notify();
+    }
+
+    /**
+     * Genera arbol de dependencia
+     *
+     * @param array $depencendes
+     * @return array
+     */
+    protected function treeDependence(array $depencendes)
+    {
+        $result = [];
+
+        foreach ($depencendes as $indx => $depen) {
+
+            $dependence = [];
+
+            $result[$indx]['dependence'] = $depen;
+
+            $composer = $this->fileContent($depen);
+
+            if (isset($composer->require)) {
+
+                foreach ($composer->require as $inx => $requires) {
+
+                    if ($this->hasRepository($inx)) {
+
+                        $dependence[$inx] = "{$inx}/$requires";
+                        $parent = $this->treeDependence($dependence);
+
+                        $result[$indx]['parent'] = $parent;
+                    }
+                }
+            }
+        }
+
+        return $result;
+    }
+
     /**
      * Recorre arbol de repositorios para obtener relacion
      * 
@@ -48,18 +105,19 @@ class Repository
      * 
      * @return mixed
      */
+    private function existDependence(array $arr,  &$result): bool
+    {
+        foreach ($arr as $inx => $dat) {
 
-    private function hasRelations(array $arr, $repo, &$result)
-    {   
-        foreach($arr as $inx => $dat){
-
-            if($inx === $repo) {
+            if ($inx === $this->search) {
 
                 $result = true;
                 break;
-            }else{
-      
-                $this->hasRelations($dat, $repo,$result);
+            }
+
+            if (isset($dat['parent'])) {
+
+                $this->existDependence($dat['parent'], $result);
             }
         }
 
@@ -67,57 +125,7 @@ class Repository
     }
 
     /**
-     * Crear arbol de repositorios
-     *
-     * @param array $directories
-     * @return array
-     */
-    public function getTreeRepositories(array $directories, $path = "")
-    {
-        foreach ($directories as $dir) {
-            
-            $treeDependency[] = $this->getTreeDependency($dir, $path);
-        }
-        
-        return $treeDependency;
-    }
-
-    /**
-     * Arbol de dependencia de un repositorio
-     *
-     * @param [type] $name
-     * @return array
-     */
-    private function getTreeDependency($name = null, $path = "")
-    {
-        $path = $path ? $path :  __DIR__ . "/../";
-
-        $fileContent = $this->fileContent("{$path}{$name}/composer.json");
-
-        $nameLibrary = $name ?? $fileContent->name;
-        $result = [];
-        
-        if ($this->hasRepository($nameLibrary)) {
-
-            $result[$nameLibrary] = [];
-            
-            if (isset($fileContent->require)) {
-
-                foreach ($fileContent->require as $inx => $requires){
-                   
-                    if ($this->hasRepository($inx)){
-
-                        $result[$nameLibrary][] = $this->getTreeDependency($inx, $path);
-                    }
-                }
-            }
-        }
-
-        return $result;
-    }
-    
-    /**
-     * Comprueba listado de Repositorios permitidos
+     * Comprueba si el repositorio se encuentra en el listado
      *
      * @param string $name
      * @return boolean
@@ -133,9 +141,9 @@ class Repository
      * @param string $dir
      * @return StdClass
      */
-    private function fileContent($dir = null)
+    private function fileContent($dir)
     {
-        $directory = !empty($dir) ? $dir : __DIR__ . "/../composer.json";
+        $directory = __DIR__ . "/../{$dir}/composer.json";
         return json_decode(file_get_contents($directory, true));
     }
 }

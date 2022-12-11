@@ -76,40 +76,40 @@ services:
   #      - MYSQL_ROOT_PASSWORD=root
   #      - MYSQL_DATABASE=development
 
-  # mysql:
-  #   build: ./docker/mysql
-  #   tty: true
-  #   restart: always
-  #   container_name: skeleton-docker.mysql
-  #   networks:
-  #     - skeleton-docker.network
-  #   ports:
-  #     - "3306:3306"
-  #   volumes:
-  #     - "./docker/mysql/config/mysql.cnf:/etc/mysql/conf.d/custom.cnf:ro"
-  #     - "./docker/mysql/dbdata:/var/lib/mysql"
-  #   environment:
-  #     - MYSQL_PASSWORD=root
-  #     - MYSQL_ROOT_PASSWORD=root
-  #     - MYSQL_DATABASE=development
+  mysql:
+     build: ./docker/mysql
+     tty: true
+     restart: always
+     container_name: skeleton-docker.mysql
+     networks:
+       - skeleton-docker.network
+     ports:
+       - "3306:3306"
+     volumes:
+       - "./docker/mysql/config/mysql.cnf:/etc/mysql/conf.d/custom.cnf:ro"
+       - "./docker/mysql/dbdata:/var/lib/mysql"
+     environment:
+       - MYSQL_PASSWORD=root
+       - MYSQL_ROOT_PASSWORD=root
+       - MYSQL_DATABASE=development
 
-  #  phpmyadmin:
-  #    image: library/phpmyadmin
-  #    container_name: skeleton-docker.phpmyadmin
-  #    tty: true
-  #    networks:
-  #      - skeleton-docker.network
-  #    depends_on:
-  #      - mysql
-  #      - mariadb
-  #    environment:
-  #      PMA_USER: root
-  #      PMA_PASSWORD: root
-  #      PMA_HOSTS: mysql,mariadb
-  #      PMA_PORT: 3306
-  #      PMA_ARBITRARY: 1
-  #    ports:
-  #      - '8080:80'
+  phpmyadmin:
+      image: library/phpmyadmin
+      container_name: skeleton-docker.phpmyadmin
+      tty: true
+      networks:
+        - skeleton-docker.network
+      depends_on:
+        - mysql
+        - mariadb
+      environment:
+        PMA_USER: root
+        PMA_PASSWORD: root
+        PMA_HOSTS: mysql,mariadb
+        PMA_PORT: 3306
+        PMA_ARBITRARY: 1
+      ports:
+        - '8080:80'
 
   # postgres:
   #   build: ./docker/postgres
